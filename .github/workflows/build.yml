@@ -6,35 +6,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # PASSO MÁGICO: O robô vai descompactar o seu arquivo .zip sozinho
+      # 1. Descompacta o arquivo zip que você enviou
       - name: Descompactar o arquivo ZIP do app
         run: unzip bizu_tatico.zip
 
+      # 2. Configura o Java para o Android
       - name: Configurar o Java do sistema
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
 
+      # 3. Configura o Motor do Flutter
       - name: Configurar o Motor Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           flutter-version: '3.19.0'
 
-      # Como o zip cria uma pasta interna, avisamos o robô para trabalhar dentro dela
+      # 4. PASSO CORRETIVO: Cria as pastas do Android/Gradle que faltavam no seu zip
+      - name: Recriar estrutura nativa do Android
+        run: flutter create . --overwrite
+        working-directory: bizu_tatico
+
+      # 5. Baixa as bibliotecas do app (sqflite, fl_chart, etc.)
       - name: Baixar dependencias
         run: flutter pub get
         working-directory: bizu_tatico
 
+      # 6. Limpa resíduos
       - name: Limpar projeto
         run: flutter clean
         working-directory: bizu_tatico
 
+      # 7. Constrói o APK definitivo
       - name: Construir o APK final
         run: flutter build apk --release --no-pub
         working-directory: bizu_tatico
 
+      # 8. Disponibiliza para download
       - name: Guardar o APK gerado para download
         uses: actions/upload-artifact@v4
         with:
