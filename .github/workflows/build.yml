@@ -1,0 +1,42 @@
+name: Gerar APK release
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # PASSO MÁGICO: O robô vai descompactar o seu arquivo .zip sozinho
+      - name: Descompactar o arquivo ZIP do app
+        run: unzip bizu_tatico.zip
+
+      - name: Configurar o Java do sistema
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Configurar o Motor Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.19.0'
+
+      # Como o zip cria uma pasta interna, avisamos o robô para trabalhar dentro dela
+      - name: Baixar dependencias
+        run: flutter pub get
+        working-directory: bizu_tatico
+
+      - name: Limpar projeto
+        run: flutter clean
+        working-directory: bizu_tatico
+
+      - name: Construir o APK final
+        run: flutter build apk --release --no-pub
+        working-directory: bizu_tatico
+
+      - name: Guardar o APK gerado para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: bizu_tatico/build/app/outputs/flutter-apk/app-release.apk
